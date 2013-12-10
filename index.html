@@ -1,0 +1,165 @@
+<html ng-app='myApp'>
+<head>
+  <title>Your Shopping Cart</title>
+  <style type="text/css">
+  .selected {
+    background-color: lightgreen;
+    }
+
+    .error {
+      background-color: red;
+    }
+    .warning {
+      background-color: yellow;
+    }
+
+  </style>
+</head>
+  <body>
+    <div ng-view></div>
+  <div ng-controller='CartController'>
+    <h1>Your Order</h1>
+    <div ng-repeat='item in items'>
+    <span>{{item.title}}</span>
+    <input ng-model='item.quantity'>
+    <span>{{item.price | currency}}</span>
+    <span>{{item.price * item.quantity | currency}}</span>
+    <button ng-click="remove($index)">Remove</button>
+
+    </div>
+    <div>Total: {{totalCart() | currency}}</div>
+    <div>Discount: {{bill.discount | currency}}</div>
+    <div>Subtotal: {{subtotal() | currency}}</div>
+
+    <h1>User Info</h1>
+    <label>E-mail</label>
+    <input type="email" ng-model="user.email">
+    <label>Last name</label>
+    <input type="text" ng-model="user.lastName">
+    <label>First name</label>
+    <input type="text" ng-model="user.firstName">
+    <label>Website</label>
+    <input type="url" ng-model="user.website">
+    <label>Description</label>
+    <textarea ng-model="user.description"></textarea>
+    <label>Password</label>
+    <input type="password" ng-model="user.password" ng-minlength="3" ng-maxlength="10" ng-pattern="/^.*(?=.*\d)(?=.*[a-zA-Z]).*$/">
+    <label>Password (repeat)</label>
+    <input type="password" ng-model="repeatPassword">
+       <label>Roles</label>
+       <label class="checkbox">
+    <input type="checkbox" ng-model="user.admin"> Is Administrator </label>
+    <pre ng-bind="user | json"></pre>
+
+
+  </div>
+
+  <form ng-controller="StartUpController">
+    Starting: <input ng-change="computeNeeded()" ng-model="funding.startingEstimate"> Recommendation: {{funding.needed}}
+  </form>
+
+
+
+  <table ng-controller='RestaurantTableController'>
+    <tr ng-repeat='restaurant in directory' ng-click='selectRestaurant($index)' ng-class='{selected: $index==selectedRow}'>
+      <td>{{restaurant.name}}</td> <td>{{restaurant.cuisine}}</td>
+    </tr>
+  </table>
+
+  <div ng-controller='HeaderController'>
+    <div ng-class='{error: isError, warning: isWarning}'>{{messageText}}</div>
+    <button ng-click='showError()'>Simulate Error</button>
+    <button ng-click='showWarning()'>Simulate Warning</button>
+  </div>
+
+  <form novalidate ng-controller="MainCtrl" name="userForm"> <label>Websites</label>
+<div ng-show="userForm.$invalid">The User Form is invalid.</div> <div ng-repeat="website in user.websites" ng-form="websiteForm">
+<input type="url" name="website" ng-model="website.url" required>
+<button ng-click="remove($index)">X</button>
+<span ng-show="showError(websiteForm.website, 'url')">
+Please must enter a valid url(must start with http://)</span>
+<span ng-show="showError(websiteForm.website, 'required')">
+          This field is required</span>
+     </div>
+     <button ng-click="addWebsite()">Add Website</button>
+   </form>
+
+
+  <script src="js/angular.js"></script>
+  <script>
+    app = angular.module('myApp',[]);
+    function CartController($scope) {
+      $scope.bill = {};
+      $scope.items = [
+                {title: 'Paint pots', quantity: 8, price: 3.95},
+                {title: 'Polka dots', quantity: 17, price: 12.95},
+                {title: 'Pebbles', quantity: 5, price: 6.95}
+      ];
+
+      $scope.remove = function(index) { $scope.items.splice(index, 1);}
+      $scope.totalCart = function() {
+        var total = 0;
+        for (var i = 0, len = $scope.items.length; i < len; i++) {
+          total = total + $scope.items[i].price * $scope.items[i].quantity;
+        }
+        return total;
+      }
+      $scope.subtotal = function() {
+        return $scope.totalCart() - $scope.bill.discount;
+      };
+      function calculateDiscount(newValue, oldValue, scope) {
+        $scope.bill.discount = newValue > 100 ? 10 : 0;
+      }
+      $scope.$watch($scope.totalCart, calculateDiscount);
+
+    }
+
+    function StartUpController($scope) {
+      $scope.funding = { startingEstimate: 0 };
+      computeNeeded = function(){
+        $scope.funding.needed = $scope.funding.startingEstimate * 10;
+      }
+      $scope.$watch('funding.startingEstimate', computeNeeded)
+    }
+
+    function RestaurantTableController($scope) {
+      $scope.directory = [{name:'The Handsome Heifer', cuisine:'BBQ'},
+                          {name:"Green's Green Greens", cuisine:'Salads'},
+                          {name:'House of Fine Fish', cuisine:'Seafood'}];
+      $scope.selectRestaurant = function(row) { $scope.selectedRow = row;};
+    }
+
+    function HeaderController($scope) {
+      $scope.isError = false;
+      $scope.isWarning = false;
+      $scope.showError = function() {
+        $scope.messageText = 'This is an error!';
+        $scope.isError = true;
+        $scope.isWarning = false;
+      };
+      $scope.showWarning = function() {
+        $scope.messageText = 'Just a warning. Please carry on.';
+        $scope.isWarning = true;
+        $scope.isError = false;
+      };
+    }
+
+    app.controller('MainCtrl', function($scope) {
+     $scope.showError = function(ngModelController, error) {
+       return ngModelController.$error[error];
+     };
+     $scope.user = {
+        websites: [
+         {url: 'http://www.bloggs.com'},
+         {url: 'http://www.jo-b.com'}
+        ]
+      };
+      $scope.addWebsite = function(){
+        $scope.user.websites.push({url: ''});
+      }
+    });
+
+
+  </script>
+  </body>
+</html>
